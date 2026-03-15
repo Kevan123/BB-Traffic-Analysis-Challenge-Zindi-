@@ -4,7 +4,7 @@
 Competition: Barbados Traffic Analysis Challenge (Zindi)  
 Task: Multiclass classification — predict congestion levels at road camera intersections  
 
----
+---  
 Overview
 This solution predicts traffic congestion ratings (`congestion_enter_rating` and `congestion_exit_rating`) for four camera views at Norman Niles intersections in Barbados. Each prediction covers a one-minute time segment and is classified into one of four congestion states:
 Label	Integer Encoding
@@ -23,7 +23,7 @@ Repository Structure
 ├── SampleSubmission.csv                               # Submission template (from Zindi)
 
 ```
----
+---  
 Requirements
 Python version
 Python 3.8 or later.
@@ -33,7 +33,7 @@ pip install pandas numpy scikit-learn xgboost
 ```
 > **Note:** XGBoost is required for the primary model. If it is not available, the notebook falls back automatically to a `RandomForestClassifier` with comparable depth settings.
 The notebook was developed and run on Google Colab. All cells are compatible with a standard Colab environment without additional configuration.
----
+---  
 Data
 The dataset is sourced from the Zindi competition and is not included in this repository. Download the following three files from the competition page and place them in the same directory as the notebook (or update the file paths in the config block):
 File	Description
@@ -57,11 +57,12 @@ USE_TEST_INPUT_AS_TRAIN = True  # Whether to use TestInputSegments labels during
 ```
 If running locally (not on Colab), update the file path constants to point to your local data directory.
 ---
-How It Works
-1. Data preprocessing
+How It Works  
+1. Data preprocessing  
 Categorical signaling levels (`none`, `low`, `medium`, `high`) and congestion labels are ordinally encoded to integers. Timestamps are parsed for time-of-day features.
 The training set and test input set are concatenated into a unified `all_df`, sorted per camera by `time_segment_id`. This allows the feature builder to look up history across both sets — reflecting the fact that test input segments provide real observed context at inference time.
-2. Feature construction
+  
+3. Feature construction
 For each prediction target at segment ID `T` and camera `C`, the feature vector is built from the `HIST_LEN` segments immediately preceding `T - EMBARGO` from the same camera:
 ```
 history window: [T - EMBARGO - HIST_LEN, ..., T - EMBARGO - 1]
@@ -74,7 +75,8 @@ Time-of-day — sine and cosine of the hour (cyclic encoding), day of week, mont
 Interaction term — `sig_mean_15 * tod_sin`
 Camera one-hot — binary column per `view_label`
 If the history window is shorter than `HIST_LEN` (beginning of a series), it is left-padded with the earliest available value — a real-time safe strategy that avoids look-ahead.
-3. Model training
+  
+3. Model training  
 Two separate classifiers are trained: one for `congestion_enter_rating` and one for `congestion_exit_rating`. The primary model is XGBoost:
 ```python
 XGBClassifier(
@@ -90,14 +92,14 @@ XGBClassifier(
     n_jobs=-1,
 )
 ```
-4. Hyperparameter tuning
+  
+4. Hyperparameter tuning  
 The notebook explores two tuning strategies:
 GridSearchCV — initial 3×3×3 grid over `max_depth`, `n_estimators`, `learning_rate`, `subsample`, `colsample_bytree`
 RandomizedSearchCV — expanded grid (adds `gamma`, `min_child_weight`), 100 iterations sampled, 3-fold CV
 > GridSearch over the expanded space is computationally expensive. On Colab, the RandomizedSearch approach is recommended. Allow approximately 30–90 minutes depending on dataset size and available hardware.
->
-> 
-5. Comparison models
+  
+5. Comparison models  
 For reference, the notebook also trains and evaluates:
 Logistic Regression
 Support Vector Classifier (SVC with `probability=True`)
@@ -119,15 +121,16 @@ Model	F1 (Overall)	Accuracy
 Optimized XGBoost	0.7408	0.7818
 Random Forest	0.7342	0.7795
 XGBoost (baseline)	0.7218	0.7773
->
-> 
-6. Ensemble
+
+  
+6. Ensemble  
 The final cells blend predicted probabilities from the best XGBoost (RandomizedSearch-tuned) and the Random Forest by simple averaging:
 ```python
 avg_proba = (proba_xgb[i] + proba_rf[i]) / 2
 ```
-The ensemble submission file is `submission_ensemble_random.csv`.
-7. Submission generation
+The ensemble submission file is `submission_ensemble_random.csv`.  
+
+7. Submission generation  
 The `generate_submission_file()` helper function wraps the prediction and output formatting logic. It produces a CSV with columns `ID`, `Target`, and `Target_Accuracy`, where both target columns contain the predicted congestion label string.
 ---
 Running the Notebook
