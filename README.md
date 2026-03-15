@@ -1,68 +1,65 @@
 # BB-Traffic-Analysis-Challenge-Zindi-
-
+  
 
 Competition: Barbados Traffic Analysis Challenge (Zindi)  
 Task: Multiclass classification — predict congestion levels at road camera intersections  
 
 ---  
-Overview
-This solution predicts traffic congestion ratings (`congestion_enter_rating` and `congestion_exit_rating`) for four camera views at Norman Niles intersections in Barbados. Each prediction covers a one-minute time segment and is classified into one of four congestion states:
-Label	Integer Encoding
-free flowing	0
-light delay	1
-moderate delay	2
-heavy delay	3
-The core approach builds a rolling-window feature set from historical signaling data per camera, with a 2-minute embargo before each prediction target, and trains separate XGBoost classifiers for enter and exit congestion.
+Overview  
+This solution predicts traffic congestion ratings (`congestion_enter_rating` and `congestion_exit_rating`) for four camera views at Norman Niles intersections in Barbados. Each prediction covers a one-minute time segment and is classified into one of four congestion states:  
+Label	Integer Encoding  
+free flowing	0  
+light delay	1  
+moderate delay	2  
+heavy delay	3  
+The core approach builds a rolling-window feature set from historical signaling data per camera, with a 2-minute embargo before each prediction target, and trains separate XGBoost classifiers for enter and exit congestion.  
 ---
-Repository Structure
+Repository Structure  
 ```
 .
 ├── Barbados_Traffic_Analysis_Challenge_Zindi.ipynb   # Main notebook
-├── Train.csv                                          # Training data (from Zindi)
-├── TestInputSegments.csv                              # Test input data (from Zindi)
-├── SampleSubmission.csv                               # Submission template (from Zindi)
-
+├── Zindi data                                         Train.csv (Training data),  TestInputSegments.csv (Test input data),  SampleSubmission.csv  (Submission template)   
 ```
 ---  
-Requirements
-Python version
-Python 3.8 or later.
-Dependencies
-```bash
-pip install pandas numpy scikit-learn xgboost
+Requirements  
+Python version  
+Python 3.8 or later.  
+Dependencies  
+```bash  
+pip install pandas numpy scikit-learn xgboost  
 ```
-> **Note:** XGBoost is required for the primary model. If it is not available, the notebook falls back automatically to a `RandomForestClassifier` with comparable depth settings.
-The notebook was developed and run on Google Colab. All cells are compatible with a standard Colab environment without additional configuration.
+> **Note:** XGBoost is required for the primary model. If it is not available, the notebook falls back automatically to a `RandomForestClassifier` with comparable depth settings.  
+The notebook was developed and run on Google Colab. All cells are compatible with a standard Colab environment without additional configuration.  
+---    
+Data  
+The dataset is sourced from the Zindi competition and is not included in this repository. Download the following three files from the competition page and place them in the same directory as the notebook (or update the file paths in the config block):  
+File	Description  
+`Train.csv`	Labelled training segments (16,076 rows, 4 camera views, 7 dates)  
+`TestInputSegments.csv`	Historical context provided for test prediction windows  
+`SampleSubmission.csv`	Template defining the IDs to predict  
+Required columns  
+Both `Train.csv` and `TestInputSegments.csv` must contain at minimum: `view_label`, `time_segment_id`, `signaling`.  
 ---  
-Data
-The dataset is sourced from the Zindi competition and is not included in this repository. Download the following three files from the competition page and place them in the same directory as the notebook (or update the file paths in the config block):
-File	Description
-`Train.csv`	Labelled training segments (16,076 rows, 4 camera views, 7 dates)
-`TestInputSegments.csv`	Historical context provided for test prediction windows
-`SampleSubmission.csv`	Template defining the IDs to predict
-Required columns
-Both `Train.csv` and `TestInputSegments.csv` must contain at minimum: `view_label`, `time_segment_id`, `signaling`.
----
-Configuration
-At the top of the notebook, a config block controls the key parameters:
-```python
-TRAIN_FILE        = "/content/Train.csv"
-TEST_INPUT_FILE   = "/content/TestInputSegments.csv"
-SAMPLE_SUB_FILE   = "/content/SampleSubmission.csv"
-SUBMISSION_OUT    = "submission.csv"
+Configuration  
+At the top of the notebook, a config block controls the key parameters:  
+```python  
+TRAIN_FILE        = "/content/Train.csv"  
+TEST_INPUT_FILE   = "/content/TestInputSegments.csv"  
+SAMPLE_SUB_FILE   = "/content/SampleSubmission.csv"  
+SUBMISSION_OUT    = "submission.csv"  
 
-HIST_LEN              = 15    # History window length (number of 1-minute segments)
-EMBARGO               = 2     # Embargo gap (minutes) between history window and prediction target
-USE_TEST_INPUT_AS_TRAIN = True  # Whether to use TestInputSegments labels during training
-```
-If running locally (not on Colab), update the file path constants to point to your local data directory.
----
+HIST_LEN              = 15    # History window length (number of 1-minute segments)  
+EMBARGO               = 2     # Embargo gap (minutes) between history window and prediction target  
+USE_TEST_INPUT_AS_TRAIN = True  # Whether to use TestInputSegments labels during training  
+```  
+If running locally (not on Colab), update the file path constants to point to your local data directory.  
+---  
 How It Works  
 1. Data preprocessing  
 Categorical signaling levels (`none`, `low`, `medium`, `high`) and congestion labels are ordinally encoded to integers. Timestamps are parsed for time-of-day features.
 The training set and test input set are concatenated into a unified `all_df`, sorted per camera by `time_segment_id`. This allows the feature builder to look up history across both sets — reflecting the fact that test input segments provide real observed context at inference time.
   
-3. Feature construction
+2. Feature construction  
 For each prediction target at segment ID `T` and camera `C`, the feature vector is built from the `HIST_LEN` segments immediately preceding `T - EMBARGO` from the same camera:
 ```
 history window: [T - EMBARGO - HIST_LEN, ..., T - EMBARGO - 1]
