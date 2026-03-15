@@ -130,26 +130,26 @@ The ensemble submission file is `submission_ensemble_random.csv`.
 7. Submission generation  
 The `generate_submission_file()` helper function wraps the prediction and output formatting logic. It produces a CSV with columns `ID`, `Target`, and `Target_Accuracy`, where both target columns contain the predicted congestion label string.
 ---
-Running the Notebook
-On Google Colab (recommended)
-Upload the notebook to Colab.
-Upload `Train.csv`, `TestInputSegments.csv`, and `SampleSubmission.csv` to `/content/` (the default Colab working directory), or mount Google Drive and update the path constants.
-Run all cells in order (Runtime → Run all).
-Download the output submission CSV(s) from the file browser panel.
-> Cells for GridSearchCV and RandomizedSearchCV (the hyperparameter tuning sections) will take significant time. Skip them and use the base XGBoost models if you only need a quick reproduction of the baseline submission.
-Locally
-```bash
-pip install pandas numpy scikit-learn xgboost jupyter
-jupyter notebook Barbados_Traffic_Analysis_Challenge_Zindi.ipynb
-```
-Update `TRAIN_FILE`, `TEST_INPUT_FILE`, and `SAMPLE_SUB_FILE` in the config block to your local paths before running.
----
-Known Issues and Notes
-Colab path hardcoding: File paths are hardcoded to `/content/`. If running outside Colab, update the config block.
-In-sample evaluation only: The training metrics computed in the notebook are in-sample (models evaluated on data they were trained on). This overestimates generalisation performance, especially for Random Forest. Use cross-validation scores or the platform leaderboard for reliable estimates.
-`Target_Accuracy` column: The submission format includes a `Target_Accuracy` column which, per competition specification, is set to the predicted class label string (same as `Target`). This is intentional — earlier iterations computed class confidence probability for this column, but the label-based approach was adopted for the final submissions.
-State dependency across cells: The notebook accumulates state (e.g., `evaluation_results`, model variables) across cells. If cells are run out of order or the kernel is restarted mid-run, some later cells include recovery logic to re-initialise models and metrics. These cells are self-contained and will re-train from scratch if needed.
-RandomizedSearch + expanded feature rebuild: The advanced feature engineering cells redefine `make_feature_vector` and rebuild `X_enter`, `X_exit`, and `X_sub`. Models trained before these cells use the original feature set; models after use the expanded set. Do not mix models across these two feature regimes.
----
-Licence
-This solution is shared for educational and reference purposes. The underlying data belongs to the competition organisers. Refer to the Zindi competition terms for data usage restrictions.
+Running the Notebook  
+On Google Colab (recommended)  
+Upload the notebook to Colab.  
+Upload `Train.csv`, `TestInputSegments.csv`, and `SampleSubmission.csv` to `/content/` (the default Colab working directory), or mount Google Drive and update the path constants.  
+Run all cells in order (Runtime → Run all).  
+Download the output submission CSV(s) from the file browser panel.  
+> Cells for GridSearchCV and RandomizedSearchCV (the hyperparameter tuning sections) will take significant time. Skip them and use the base XGBoost models if you only need a quick reproduction of the baseline submission.  
+Locally  
+```bash  
+pip install pandas numpy scikit-learn xgboost jupyter  
+jupyter notebook Barbados_Traffic_Analysis_Challenge_Zindi.ipynb  
+```  
+Update `TRAIN_FILE`, `TEST_INPUT_FILE`, and `SAMPLE_SUB_FILE` in the config block to your local paths before running.  
+---  
+Known Issues and Notes  
+Colab path hardcoding: File paths are hardcoded to `/content/`. If running outside Colab, update the config block.  
+In-sample evaluation only: The training metrics computed in the notebook are in-sample (models evaluated on data they were trained on). This overestimates generalisation performance, especially for Random Forest. Use cross-validation scores or the platform leaderboard for reliable estimates.  
+`Target_Accuracy` column: The submission format includes a `Target_Accuracy` column which, per competition specification, is set to the predicted class label string (same as `Target`). This is intentional — earlier iterations computed class confidence probability for this column, but the label-based approach was adopted for the final submissions.  
+State dependency across cells: The notebook accumulates state (e.g., `evaluation_results`, model variables) across cells. If cells are run out of order or the kernel is restarted mid-run, some later cells include recovery logic to re-initialise models and metrics. These cells are self-contained and will re-train from scratch if needed.  
+RandomizedSearch + expanded feature rebuild: The advanced feature engineering cells redefine `make_feature_vector` and rebuild `X_enter`, `X_exit`, and `X_sub`. Models trained before these cells use the original feature set; models after use the expanded set. Do not mix models across these two feature regimes.  
+---  
+  
+This solution is shared for educational and reference purposes. The underlying data belongs to the competition organisers. Refer to the Zindi competition terms for data usage restrictions.  
