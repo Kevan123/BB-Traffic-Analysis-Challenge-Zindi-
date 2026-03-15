@@ -5,7 +5,7 @@ Competition: Barbados Traffic Analysis Challenge (Zindi)
 Task: Multiclass classification — predict congestion levels at road camera intersections  
 
 ---  
-**Overview ** 
+**Overview**   
 This solution predicts traffic congestion ratings (`congestion_enter_rating` and `congestion_exit_rating`) for four camera views at Norman Niles intersections in Barbados. Each prediction covers a one-minute time segment and is classified into one of four congestion states:  
 Label	Integer Encoding  
 **free flowing	0  
@@ -15,14 +15,14 @@ heavy delay	3  **
 The core approach builds a rolling-window feature set from historical signaling data per camera, with a 2-minute embargo before each prediction target, and trains separate XGBoost classifiers for enter and exit congestion.  
 
 ---
-**Repository Structure  **  
+**Repository Structure**    
 ```
 .
 ├── Barbados_Traffic_Analysis_Challenge_Zindi.ipynb   # Main notebook
 ├── Zindi data                                         Train.csv (Training data),  TestInputSegments.csv (Test input data),  SampleSubmission.csv  (Submission template)   
 ```
 ---  
-**Requirements **   
+**Requirements**     
 Python version  
 Python 3.8 or later.  
 Dependencies  
@@ -32,7 +32,7 @@ pip install pandas numpy scikit-learn xgboost
 > **Note:** XGBoost is required for the primary model. If it is not available, the notebook falls back automatically to a `RandomForestClassifier` with comparable depth settings.  
 The notebook was developed and run on Google Colab. All cells are compatible with a standard Colab environment without additional configuration.  
   
-**Data  **
+**Data**  
 The dataset is sourced from the Zindi competition and is not included in this repository. Download the following three files from the competition page and place them in the same directory as the notebook (or update the file paths in the config block):  
 File	Description  
 `Train.csv`	Labelled training segments (16,076 rows, 4 camera views, 7 dates)  
@@ -42,7 +42,7 @@ Required columns
 Both `Train.csv` and `TestInputSegments.csv` must contain at minimum: `view_label`, `time_segment_id`, `signaling`. 
  
 
-**Configuration  **  
+**Configuration**    
 At the top of the notebook, a config block controls the key parameters:  
 ```python  
 TRAIN_FILE        = "/content/Train.csv"  
